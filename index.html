@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Универсальный Браузер</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🎬</div>
+                <div class="logo-text">Универсальный Браузер</div>
+            </div>
+            
+            <div class="header-right">
+                <!-- Mode Switcher -->
+                <div class="mode-switcher">
+                    <button class="mode-btn active" id="browserMode" onclick="switchMode('browser')">
+                        🔍 Поиск
+                    </button>
+                    <button class="mode-btn" id="youtubeMode" onclick="switchMode('youtube')">
+                        📺 YouTube
+                    </button>
+                </div>
+
+                <!-- Auth Section -->
+                <div id="authSection">
+                    <button class="auth-btn" onclick="showAuthModal()">Войти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Navigation -->
+    <div class="youtube-nav" id="youtubeNav" style="display: none;">
+        <button class="youtube-nav-btn active" onclick="switchYouTubeTab('search')">🔍 Поиск</button>
+        <button class="youtube-nav-btn" onclick="switchYouTubeTab('history')">📚 История</button>
+        <button class="youtube-nav-btn" onclick="switchYouTubeTab('subscriptions')">⭐ Подписки</button>
+        <button class="youtube-nav-btn" onclick="switchYouTubeTab('channels')">📺 Каналы</button>
+    </div>
+
+    <!-- Search Section -->
+    <section class="search-section">
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" 
+                   placeholder="Введите поисковый запрос..." value="музыка">
+            <button class="search-btn" onclick="performSearch()">
+                🔍 Найти
+            </button>
+        </div>
+    </section>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-success" id="statusText">✅ Готов к работе</div>
+        <div class="api-info" id="modeInfo">Режим: Поиск</div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-container" id="results">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>Выберите режим и введите запрос</h3>
+            <p>Начните поиск в интернете или на YouTube</p>
+            
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="searchQuick('техно музыка')">🎵 Техно</button>
+                <button class="quick-btn" onclick="searchQuick('lofi hip hop')">🎶 Lo-Fi</button>
+                <button class="quick-btn" onclick="searchQuick('jazz')">🎷 Джаз</button>
+                <button class="quick-btn" onclick="searchQuick('фонк')">🔥 Фонк</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-content">
+            <button class="close-auth" onclick="hideAuthModal()">×</button>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Вход</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Регистрация</button>
+            </div>
+
+            <!-- Login Form -->
+            <div class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <input type="email" class="form-input" id="loginEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Пароль" required>
+                </div>
+                <button class="auth-submit" onclick="loginWithEmail()">Войти</button>
+                
+                <div class="auth-divider">
+                    <span>или</span>
+                </div>
+                
+                <button class="google-auth" onclick="loginWithGoogle()">
+                    <span>Войти через Google</span>
+                </button>
+                
+                <div class="auth-error" id="loginError"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="registerName" placeholder="Имя" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-input" id="registerEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" id="registerPassword" placeholder="Пароль" required>
+                </div>
+                <button class="auth-submit" onclick="registerWithEmail()">Зарегистрироваться</button>
+                
+                <div class="auth-divider">
+                    <span>или</span>
+                </div>
+                
+                <button class="google-auth" onclick="loginWithGoogle()">
+                    <span>Войти через Google</span>
+                </button>
+                
+                <div class="auth-error" id="registerError"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Video Player -->
+    <div class="video-container" id="videoContainer">
+        <iframe 
+            id="video-player" 
+            frameborder="0" 
+            allowfullscreen
+            allow="autoplay; encrypted-media"
+        ></iframe>
+        <div class="video-controls-overlay">
+            <button class="back-btn" onclick="closeVideo()">← Назад к поиску</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/search.js"></script>
+    <script src="assets/js/youtube.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
