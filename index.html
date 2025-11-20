@@ -8,10 +8,11 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* ВСЕ СТИЛИ БУДУТ ЗДЕСЬ */
         * {
             margin: 0;
             padding: 0;
@@ -944,7 +945,7 @@
     </div>
 
     <script>
-        // 🔥 НОВЫЙ FIREBASE CONFIG
+        // 🔥 FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAEGfuhG94Jtjqquaj1S5TM3I8pacahnLo",
             authDomain: "universal-browse-2ec51.firebaseapp.com",
@@ -957,7 +958,13 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.firestore();
+
+        // 🔥 SUPABASE CONFIG
+        const SUPABASE_URL = 'https://qnkkuvdraezplcefkufd.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFua2t1dmRyYWV6cGxjZWZrdWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NDI1MzksImV4cCI6MjA3OTIxODUzOX0.5mJN8jw0ZpavZ9KqAfr1T1h62nKMhUbdi6Sgqg7yz-A'
+
+        // Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
         // API Keys
         const SEARCH_API_KEY = "AIzaSyClSXPxjAzchdDLnUQtsqpObaWMjaCpVsc";
@@ -977,13 +984,15 @@
         let currentUser = null;
 
         // Auth State Listener
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             currentUser = user;
             updateAuthUI();
             
             if (user) {
-                loadUserData();
+                console.log('User logged in:', user.email);
+                await loadUserData();
             } else {
+                console.log('User logged out');
                 watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
                 subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
             }
@@ -1024,15 +1033,6 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 await userCredential.user.updateProfile({ displayName: name });
                 
-                // Create user document in Firestore
-                await db.collection('users').doc(userCredential.user.uid).set({
-                    name: name,
-                    email: email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    watchHistory: [],
-                    subscriptions: []
-                });
-
                 hideAuthModal();
                 showNotification('✅ Аккаунт создан успешно!');
             } catch (error) {
@@ -1058,21 +1058,7 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             
             try {
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                
-                // Check if user document exists
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (!userDoc.exists) {
-                    await db.collection('users').doc(user.uid).set({
-                        name: user.displayName,
-                        email: user.email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        watchHistory: [],
-                        subscriptions: []
-                    });
-                }
-                
+                await auth.signInWithPopup(provider);
                 hideAuthModal();
                 showNotification('✅ Вход через Google выполнен!');
             } catch (error) {
@@ -1128,23 +1114,7 @@
             }
         }
 
-        // 📊 FIRESTORE DATA MANAGEMENT
-        async function loadUserData() {
-            if (!currentUser) return;
-
-            try {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    watchHistory = userData.watchHistory || [];
-                    subscriptions = userData.subscriptions || [];
-                }
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        }
-
+        // 💾 SUPABASE DATA MANAGEMENT
         async function saveUserData() {
             if (!currentUser) {
                 localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
@@ -1153,12 +1123,48 @@
             }
 
             try {
-                await db.collection('users').doc(currentUser.uid).update({
-                    watchHistory: watchHistory,
-                    subscriptions: subscriptions
-                });
+                const { error } = await supabase
+                    .from('user_data')
+                    .upsert({
+                        user_id: currentUser.uid,
+                        watch_history: watchHistory,
+                        subscriptions: subscriptions,
+                        updated_at: new Date().toISOString()
+                    })
+
+                if (!error) {
+                    console.log('✅ Дані збережено в Supabase!');
+                }
             } catch (error) {
-                console.error('Error saving user data:', error);
+                console.error('❌ Помилка збереження:', error);
+                localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
+                localStorage.setItem('youtubeSubscriptions', JSON.stringify(subscriptions));
+            }
+        }
+
+        async function loadUserData() {
+            if (!currentUser) {
+                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
+                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('user_data')
+                    .select('*')
+                    .eq('user_id', currentUser.uid)
+                    .single()
+
+                if (data && !error) {
+                    watchHistory = data.watch_history || [];
+                    subscriptions = data.subscriptions || [];
+                    console.log('✅ Дані завантажено з Supabase!');
+                }
+            } catch (error) {
+                console.error('❌ Помилка завантаження:', error);
+                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
+                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
             }
         }
 
@@ -1242,9 +1248,12 @@
                 return;
             }
             
-            let html = `<div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
-                📚 История просмотров: ${watchHistory.length} видео
-            </div>`;
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    📚 История просмотров: ${watchHistory.length} видео
+                    ${currentUser ? '<span style="color: #44ff44; margin-left: 10px;">☁️ Supabase</span>' : ''}
+                </div>
+            `;
             
             watchHistory.slice(-20).reverse().forEach(item => {
                 html += `
@@ -1278,9 +1287,12 @@
                 return;
             }
             
-            let html = `<div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
-                ⭐ Подписки: ${subscriptions.length} каналов
-            </div>`;
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    ⭐ Подписки: ${subscriptions.length} каналов
+                    ${currentUser ? '<span style="color: #44ff44; margin-left: 10px;">☁️ Supabase</span>' : ''}
+                </div>
+            `;
             
             subscriptions.forEach(channel => {
                 html += `
