@@ -4,7 +4,805 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎬 Универсальный Браузер</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ВСЕ СТИЛИ БУДУТ ЗДЕСЬ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #333;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #252525;
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            background: #ff4444;
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ff4444;
+        }
+
+        .auth-submit {
+            width: 100%;
+            padding: 12px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-submit:hover {
+            background: #ff6666;
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+            position: relative;
+        }
+
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #333;
+        }
+
+        .auth-divider span {
+            background: #1a1a1a;
+            padding: 0 15px;
+        }
+
+        .google-auth {
+            width: 100%;
+            padding: 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .google-auth:hover {
+            background: #5390f5;
+        }
+
+        .auth-error {
+            color: #ff4444;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .close-auth {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .mode-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .youtube-nav {
+            background: #202020;
+            padding: 10px 20px;
+            border-bottom: 1px solid #303030;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .youtube-nav-btn {
+            padding: 8px 16px;
+            background: #373737;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .youtube-nav-btn.active {
+            background: white;
+            color: black;
+        }
+
+        .youtube-nav-btn:hover {
+            background: #505050;
+        }
+
+        .search-section {
+            padding: 15px 20px;
+            background: #202020;
+            border-bottom: 1px solid #303030;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: #121212;
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #ff4444;
+            background: #1a1a1a;
+        }
+
+        .search-input::placeholder {
+            color: #aaaaaa;
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+            background: #ff4444;
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            background: #ff6666;
+            transform: translateY(-1px);
+        }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #303030;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+
+        .status-success {
+            color: #44ff44;
+        }
+
+        .results-container {
+            padding: 15px;
+            min-height: 500px;
+        }
+
+        .video-card {
+            background: #202020;
+            margin: 10px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid #303030;
+            cursor: pointer;
+        }
+
+        .video-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+        }
+
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #303030;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .youtube-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #ff0000;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .video-info {
+            padding: 12px;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-channel {
+            font-size: 14px;
+            color: #aaaaaa;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subscribe-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .subscribe-btn.subscribed {
+            background: #303030;
+            color: #aaa;
+        }
+
+        .subscribe-btn:hover {
+            background: #ff6666;
+        }
+
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .browser-result {
+            background: #202020;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #303030;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .browser-result:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 15px rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+        }
+
+        .result-title {
+            color: #8ab4f8;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .result-url {
+            color: #34a853;
+            font-size: 12px;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+
+        .result-snippet {
+            color: #cccccc;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .channel-card {
+            background: #202020;
+            margin: 10px 0;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #303030;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+        }
+
+        .channel-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #303030;
+        }
+
+        .channel-info {
+            flex: 1;
+        }
+
+        .channel-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .channel-stats {
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .channel-description {
+            color: #cccccc;
+            font-size: 14px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .history-item {
+            background: #202020;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #303030;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            gap: 15px;
+        }
+
+        .history-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 15px rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+        }
+
+        .history-thumbnail {
+            width: 120px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #303030;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .history-channel {
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .load-more-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .load-more-btn:hover {
+            background: #ff6666;
+            transform: translateY(-2px);
+        }
+
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 1000;
+            display: none;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-controls-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1001;
+            pointer-events: none;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #aaaaaa;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #303030;
+            border-top: 4px solid #ff4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            margin: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaaaaa;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            background: #303030;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #404040;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                width: 100%;
+            }
+            
+            .mode-switcher {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .video-thumbnail-container {
+                height: 180px;
+            }
+            
+            .channel-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .history-item {
+                flex-direction: column;
+            }
+            
+            .history-thumbnail {
+                width: 100%;
+                height: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -145,10 +943,672 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/search.js"></script>
-    <script src="assets/js/youtube.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script>
+        // 🔥 НОВЫЙ FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEGfuhG94Jtjqquaj1S5TM3I8pacahnLo",
+            authDomain: "universal-browse-2ec51.firebaseapp.com",
+            projectId: "universal-browse-2ec51",
+            storageBucket: "universal-browse-2ec51.firebasestorage.app",
+            messagingSenderId: "625824159300",
+            appId: "1:625824159300:web:70a9157479a5d4e7924e11"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // API Keys
+        const SEARCH_API_KEY = "AIzaSyClSXPxjAzchdDLnUQtsqpObaWMjaCpVsc";
+        const SEARCH_ENGINE_ID = "941011482ddeb4a66";
+        const YOUTUBE_API_KEY = "AIzaSyCSeZzG1u99LqcTpm78P3-XSg4poOQEVCo";
+        
+        // Global Variables
+        let currentMode = 'browser';
+        let currentYouTubeTab = 'search';
+        let nextPageToken = '';
+        let currentSearchQuery = '';
+        let browserStartIndex = 1;
+        
+        // User Data
+        let watchHistory = [];
+        let subscriptions = [];
+        let currentUser = null;
+
+        // Auth State Listener
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateAuthUI();
+            
+            if (user) {
+                loadUserData();
+            } else {
+                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
+                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
+            }
+        });
+
+        // 🔐 AUTH FUNCTIONS
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'block';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            clearAuthErrors();
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            document.querySelector(`.auth-tab[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            clearAuthErrors();
+        }
+
+        function clearAuthErrors() {
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('registerError').textContent = '';
+        }
+
+        async function registerWithEmail() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorElement = document.getElementById('registerError');
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                
+                // Create user document in Firestore
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    watchHistory: [],
+                    subscriptions: []
+                });
+
+                hideAuthModal();
+                showNotification('✅ Аккаунт создан успешно!');
+            } catch (error) {
+                errorElement.textContent = getAuthErrorMessage(error);
+            }
+        }
+
+        async function loginWithEmail() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideAuthModal();
+                showNotification('✅ Вход выполнен успешно!');
+            } catch (error) {
+                errorElement.textContent = getAuthErrorMessage(error);
+            }
+        }
+
+        async function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            try {
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                // Check if user document exists
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await db.collection('users').doc(user.uid).set({
+                        name: user.displayName,
+                        email: user.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        watchHistory: [],
+                        subscriptions: []
+                    });
+                }
+                
+                hideAuthModal();
+                showNotification('✅ Вход через Google выполнен!');
+            } catch (error) {
+                document.getElementById('loginError').textContent = getAuthErrorMessage(error);
+            }
+        }
+
+        function logout() {
+            auth.signOut();
+            showNotification('🔒 Вы вышли из аккаунта');
+        }
+
+        function getAuthErrorMessage(error) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    return 'Этот email уже используется';
+                case 'auth/invalid-email':
+                    return 'Неверный формат email';
+                case 'auth/weak-password':
+                    return 'Пароль слишком слабый (минимум 6 символов)';
+                case 'auth/user-not-found':
+                    return 'Пользователь не найден';
+                case 'auth/wrong-password':
+                    return 'Неверный пароль';
+                case 'auth/popup-closed-by-user':
+                    return 'Окно авторизации закрыто';
+                default:
+                    return 'Произошла ошибка: ' + error.message;
+            }
+        }
+
+        function updateAuthUI() {
+            const authSection = document.getElementById('authSection');
+            
+            if (currentUser) {
+                const displayName = currentUser.displayName || currentUser.email.split('@')[0];
+                const firstLetter = displayName.charAt(0).toUpperCase();
+                
+                authSection.innerHTML = `
+                    <div class="user-profile" onclick="showUserMenu()">
+                        <div class="user-avatar">${firstLetter}</div>
+                        <div class="user-name">${displayName}</div>
+                    </div>
+                `;
+            } else {
+                authSection.innerHTML = '<button class="auth-btn" onclick="showAuthModal()">Войти</button>';
+            }
+        }
+
+        function showUserMenu() {
+            if (confirm('Вы хотите выйти из аккаунта?')) {
+                logout();
+            }
+        }
+
+        // 📊 FIRESTORE DATA MANAGEMENT
+        async function loadUserData() {
+            if (!currentUser) return;
+
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    watchHistory = userData.watchHistory || [];
+                    subscriptions = userData.subscriptions || [];
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        async function saveUserData() {
+            if (!currentUser) {
+                localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
+                localStorage.setItem('youtubeSubscriptions', JSON.stringify(subscriptions));
+                return;
+            }
+
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    watchHistory: watchHistory,
+                    subscriptions: subscriptions
+                });
+            } catch (error) {
+                console.error('Error saving user data:', error);
+            }
+        }
+
+        // 🎬 YOUTUBE FUNCTIONS
+        function addToHistory(videoId, title, channel, thumbnail) {
+            const existingIndex = watchHistory.findIndex(item => item.videoId === videoId);
+            
+            if (existingIndex !== -1) {
+                watchHistory[existingIndex].watchedAt = new Date().toISOString();
+            } else {
+                watchHistory.push({
+                    videoId,
+                    title,
+                    channel,
+                    thumbnail,
+                    watchedAt: new Date().toISOString()
+                });
+            }
+            
+            if (watchHistory.length > 100) {
+                watchHistory = watchHistory.slice(-100);
+            }
+            
+            saveUserData();
+        }
+
+        function toggleSubscription(channelId, channelTitle = '', channelThumbnail = '') {
+            const existingSub = subscriptions.find(sub => sub.id === channelId);
+            
+            if (existingSub) {
+                subscriptions = subscriptions.filter(sub => sub.id !== channelId);
+                showNotification(`❌ Отписались от канала "${existingSub.title}"`);
+            } else {
+                subscriptions.push({
+                    id: channelId,
+                    title: channelTitle,
+                    thumbnail: channelThumbnail
+                });
+                showNotification(`✅ Подписались на канал "${channelTitle}"`);
+            }
+            
+            saveUserData();
+        }
+
+        // 📺 YOUTUBE UI FUNCTIONS
+        function switchYouTubeTab(tab) {
+            currentYouTubeTab = tab;
+            
+            document.querySelectorAll('.youtube-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            switch(tab) {
+                case 'search':
+                    showEmptyYouTubeState();
+                    break;
+                case 'history':
+                    showWatchHistory();
+                    break;
+                case 'subscriptions':
+                    showSubscriptions();
+                    break;
+                case 'channels':
+                    showChannelSearch();
+                    break;
+            }
+        }
+
+        function showWatchHistory() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (watchHistory.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📚</div>
+                        <h3>История просмотров пуста</h3>
+                        <p>${currentUser ? 'Начните смотреть видео, чтобы они появились здесь' : 'Войдите в аккаунт, чтобы сохранять историю просмотров'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                📚 История просмотров: ${watchHistory.length} видео
+            </div>`;
+            
+            watchHistory.slice(-20).reverse().forEach(item => {
+                html += `
+                    <div class="history-item" onclick="playYouTubeVideo('${item.videoId}')">
+                        <img src="${item.thumbnail}" class="history-thumbnail" alt="${item.title}">
+                        <div class="history-info">
+                            <div class="history-title">${item.title}</div>
+                            <div class="history-channel">📺 ${item.channel}</div>
+                            <div style="color: #888; font-size: 12px; margin-top: 5px;">
+                                📅 ${formatDate(item.watchedAt)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function showSubscriptions() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (subscriptions.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⭐</div>
+                        <h3>${currentUser ? 'Нет подписок' : 'Войдите в аккаунт'}</h3>
+                        <p>${currentUser ? 'Подпишитесь на каналы, чтобы они появились здесь' : 'Чтобы сохранять подписки'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                ⭐ Подписки: ${subscriptions.length} каналов
+            </div>`;
+            
+            subscriptions.forEach(channel => {
+                html += `
+                    <div class="channel-card">
+                        <img src="${channel.thumbnail}" class="channel-avatar" alt="${channel.title}">
+                        <div class="channel-info">
+                            <div class="channel-name">${channel.title}</div>
+                        </div>
+                        <button class="subscribe-btn subscribed" onclick="toggleSubscription('${channel.id}')">
+                            ✅ Подписан
+                        </button>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function showChannelSearch() {
+            document.getElementById('results').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📺</div>
+                    <h3>Поиск каналов</h3>
+                    <p>Введите название канала для поиска</p>
+                    <div class="search-container" style="margin-top: 20px;">
+                        <input type="text" class="search-input" id="channelSearchInput" 
+                               placeholder="Введите название канала...">
+                        <button class="search-btn" onclick="searchChannels()">
+                            🔍 Найти каналы
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 🔍 SEARCH FUNCTIONS
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showError('Введите поисковый запрос');
+                return;
+            }
+
+            currentSearchQuery = query;
+            showLoading(query);
+            
+            try {
+                if (currentMode === 'youtube') {
+                    await searchYouTubeVideos(query);
+                } else {
+                    await searchWeb(query);
+                }
+            } catch (error) {
+                showError(`Ошибка: ${error.message}`);
+            }
+        }
+
+        async function searchWeb(query) {
+            const url = `https://www.googleapis.com/customsearch/v1?key=${SEARCH_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    displayBrowserResults(data.items, query);
+                } else {
+                    showNoResults(query);
+                }
+            } catch (error) {
+                showError('Ошибка поиска');
+            }
+        }
+
+        function displayBrowserResults(items, query) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    🔍 Найдено результатов: ${items.length}
+                </div>
+            `;
+            
+            items.forEach((item) => {
+                html += `
+                    <div class="browser-result" onclick="window.open('${item.link}', '_blank')">
+                        <div class="result-title">${item.title}</div>
+                        <div class="result-url">${item.displayLink}</div>
+                        <div class="result-snippet">${item.snippet}</div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        async function searchYouTubeVideos(query) {
+            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+            
+            try {
+                const searchResponse = await fetch(searchUrl);
+                const searchData = await searchResponse.json();
+                
+                if (searchData.items && searchData.items.length > 0) {
+                    const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+                    const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
+                    const videosResponse = await fetch(videosUrl);
+                    const videosData = await videosResponse.json();
+                    
+                    displayYouTubeResults(videosData.items, query);
+                } else {
+                    showNoResults(query);
+                }
+            } catch (error) {
+                showError(`Ошибка YouTube: ${error.message}`);
+            }
+        }
+
+        function displayYouTubeResults(videos, query) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    📺 Найдено YouTube видео: ${videos.length}
+                </div>
+            `;
+            
+            html += videos.map(video => {
+                const duration = formatDuration(video.contentDetails?.duration);
+                const viewCount = formatViews(video.statistics?.viewCount);
+                const publishedAt = formatDate(video.snippet.publishedAt);
+                
+                return `
+                    <div class="video-card" onclick="playYouTubeVideo('${video.id}')">
+                        <div class="video-thumbnail-container">
+                            <img src="${video.snippet.thumbnails.medium.url}" class="video-thumbnail" alt="${video.snippet.title}">
+                            <div class="youtube-badge">YouTube</div>
+                            <div class="video-duration">${duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.snippet.title}</div>
+                            <div class="video-channel">
+                                <span>📺 ${video.snippet.channelTitle}</span>
+                                <button class="subscribe-btn" onclick="event.stopPropagation(); toggleSubscription('${video.snippet.channelId}', '${video.snippet.channelTitle}', '${video.snippet.thumbnails.default.url}')">
+                                    🔔 Подписаться
+                                </button>
+                            </div>
+                            <div class="video-meta">
+                                <span>👁️ ${viewCount}</span>
+                                <span>📅 ${publishedAt}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // 🎥 VIDEO PLAYER
+        function playYouTubeVideo(videoId) {
+            const videoContainer = document.getElementById('videoContainer');
+            const videoPlayer = document.getElementById('video-player');
+            
+            const videoElement = document.querySelector(`[onclick="playYouTubeVideo('${videoId}')"]`);
+            const title = videoElement?.querySelector('.video-title')?.textContent || 'Неизвестное видео';
+            const channel = videoElement?.querySelector('.video-channel span')?.textContent?.replace('📺 ', '') || 'Неизвестный канал';
+            const thumbnail = videoElement?.querySelector('.video-thumbnail')?.src || '';
+            
+            videoPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            videoContainer.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            addToHistory(videoId, title, channel, thumbnail);
+        }
+
+        function closeVideo() {
+            const videoContainer = document.getElementById('videoContainer');
+            const videoPlayer = document.getElementById('video-player');
+            
+            videoPlayer.src = '';
+            videoContainer.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 🔧 HELPER FUNCTIONS
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            document.getElementById('browserMode').classList.toggle('active', mode === 'browser');
+            document.getElementById('youtubeMode').classList.toggle('active', mode === 'youtube');
+            
+            const searchInput = document.getElementById('searchInput');
+            const modeInfo = document.getElementById('modeInfo');
+            const youtubeNav = document.getElementById('youtubeNav');
+            
+            if (mode === 'browser') {
+                searchInput.placeholder = "Поиск в интернете...";
+                modeInfo.textContent = "Режим: Поиск";
+                youtubeNav.style.display = 'none';
+                showEmptyState();
+            } else {
+                searchInput.placeholder = "Поиск YouTube видео...";
+                modeInfo.textContent = "Режим: YouTube";
+                youtubeNav.style.display = 'flex';
+                showEmptyYouTubeState();
+            }
+        }
+
+        function showEmptyState() {
+            document.getElementById('results').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3>Выберите режим и введите запрос</h3>
+                    <p>Начните поиск в интернете или на YouTube</p>
+                </div>
+            `;
+        }
+
+        function showEmptyYouTubeState() {
+            document.getElementById('results').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📺</div>
+                    <h3>Введите запрос для поиска на YouTube</h3>
+                    <p>Или перейдите в другие разделы</p>
+                </div>
+            `;
+        }
+
+        function showLoading(query) {
+            document.getElementById('results').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Ищем "${query}"${currentMode === 'youtube' ? ' на YouTube' : ''}...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('results').innerHTML = `
+                <div class="error">❌ ${message}</div>
+            `;
+        }
+
+        function showNoResults(query) {
+            document.getElementById('results').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3>По запросу "${query}" ничего не найдено</h3>
+                    <p>Попробуйте изменить запрос</p>
+                </div>
+            `;
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ff4444;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 10px;
+                z-index: 10000;
+                font-weight: 500;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function searchQuick(query) {
+            document.getElementById('searchInput').value = query;
+            performSearch();
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return '--:--';
+            const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+            if (!match) return '--:--';
+            
+            const hours = (match[1] || '').replace('H', '');
+            const minutes = (match[2] || '').replace('M', '');
+            const seconds = (match[3] || '').replace('S', '');
+            
+            if (hours) {
+                return `${hours}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${seconds.padStart(2, '0')}`;
+            }
+        }
+
+        function formatViews(viewCount) {
+            if (!viewCount) return '0';
+            const count = parseInt(viewCount);
+            if (count >= 1000000) {
+                return (count / 1000000).toFixed(1) + 'M';
+            } else if (count >= 1000) {
+                return (count / 1000).toFixed(1) + 'K';
+            }
+            return count.toString();
+        }
+
+        function formatDate(publishedAt) {
+            const date = new Date(publishedAt);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Сегодня';
+            if (diffDays === 1) return 'Вчера';
+            if (diffDays < 7) return `${diffDays} дней назад`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} нед. назад`;
+            return `${Math.floor(diffDays / 30)} мес. назад`;
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            switchMode('browser');
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+        });
+    </script>
 </body>
 </html>
