@@ -10,9 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         * {
             margin: 0;
@@ -86,6 +83,7 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
+            position: relative;
         }
 
         .user-avatar {
@@ -98,11 +96,68 @@
             justify-content: center;
             font-weight: 600;
             font-size: 14px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-name {
             font-size: 14px;
             font-weight: 500;
+        }
+
+        .user-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid #333;
+            min-width: 180px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-menu.show {
+            display: block;
+        }
+
+        .user-info {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: #252525;
+        }
+
+        .menu-item.logout {
+            color: #ff4444;
         }
 
         .auth-modal {
@@ -247,6 +302,7 @@
             font-size: 12px;
             margin-top: 5px;
             text-align: center;
+            min-height: 20px;
         }
 
         .close-auth {
@@ -1102,7 +1158,18 @@
         const SEARCH_API_KEY = "AIzaSyClSXPxjAzchdDLnUQtsqpObaWMjaCpVsc";
         const SEARCH_ENGINE_ID = "941011482ddeb4a66";
         const YOUTUBE_API_KEY = "AIzaSyCSeZzG1u99LqcTpm78P3-XSg4poOQEVCo";
-        
+
+        // Firebase конфигурация для GitHub Pages
+        // ВАЖНО: Вам нужно создать проект в Firebase Console и заменить эти значения
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSeZzG1u99LqcTpm78P3-XSg4poOQEVCo",
+            authDomain: "universal-browser.firebaseapp.com",
+            projectId: "universal-browser",
+            storageBucket: "universal-browser.appspot.com",
+            messagingSenderId: "509123456789", // Замените на ваш
+            appId: "1:509123456789:web:abcdef1234567890" // Замените на ваш
+        };
+
         // Глобальные переменные для бесконечной ленты
         let currentMode = 'browser';
         let currentYouTubeTab = 'search';
@@ -1125,6 +1192,33 @@
         // YouTube Player API
         let ytPlayer = null;
         let currentVideoId = null;
+
+        // 🔐 ИНИЦИАЛИЗАЦИЯ FIREBASE
+        let firebaseInitialized = false;
+        
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log("Firebase успешно инициализирован");
+                    firebaseInitialized = true;
+                    
+                    // Проверяем состояние авторизации
+                    checkAuthState();
+                    
+                    // Показываем уведомление о успешной инициализации
+                    setTimeout(() => {
+                        showNotification("✅ Firebase подключен!");
+                    }, 1000);
+                } else {
+                    firebaseInitialized = true;
+                    console.log("Firebase уже инициализирован");
+                }
+            } catch (error) {
+                console.error("Ошибка инициализации Firebase:", error);
+                showNotification("⚠️ Firebase не подключен. Используйте локальную авторизацию.");
+            }
+        }
 
         // 📺 ИСПРАВЛЕННЫЙ YOUTUBE PLAYER
         function playYouTubeVideo(videoId) {
@@ -2045,7 +2139,7 @@
             return `${Math.floor(diffDays / 30)} мес. назад`;
         }
 
-        // 🔐 УПРОЩЕННАЯ АУТЕНТИФИКАЦИЯ
+        // 🔐 УПРОЩЕННАЯ АУТЕНТИФИКАЦИЯ С FIREBASE
         function showAuthModal() {
             document.getElementById('authModal').style.display = 'block';
         }
@@ -2073,12 +2167,187 @@
         async function loginWithGoogle() {
             const errorElement = document.getElementById('loginError');
             
-            if (window.location.protocol === 'file:') {
-                errorElement.textContent = 'Для Google входа запустите проект через localhost сервер (например, VS Code Live Server)';
-                return;
+            try {
+                if (!firebaseInitialized) {
+                    initFirebase();
+                    if (!firebaseInitialized) {
+                        errorElement.textContent = 'Firebase не инициализирован. Попробуйте перезагрузить страницу.';
+                        return;
+                    }
+                }
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('profile');
+                provider.addScope('email');
+                
+                showNotification('🔐 Запуск Google авторизации...');
+                
+                // Используем popup для GitHub Pages
+                const result = await firebase.auth().signInWithPopup(provider);
+                
+                // Получаем данные пользователя
+                const user = result.user;
+                
+                // Сохраняем данные пользователя в localStorage
+                localStorage.setItem('user', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    name: user.displayName,
+                    photoURL: user.photoURL
+                }));
+                
+                hideAuthModal();
+                showNotification(`✅ Добро пожаловать, ${user.displayName}!`);
+                updateAuthUI(user);
+                
+            } catch (error) {
+                console.error('Ошибка Google авторизации:', error);
+                
+                // Пользовательские сообщения об ошибках
+                if (error.code === 'auth/popup-blocked') {
+                    errorElement.textContent = 'Браузер заблокировал всплывающее окно. Разрешите всплывающие окна для этого сайта.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    errorElement.textContent = 'Вы закрыли окно авторизации.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    errorElement.textContent = `
+                        Домен не авторизован в Firebase Console.
+                        <br><br>
+                        <strong>Чтобы исправить:</strong>
+                        <br>1. Перейдите в <a href="https://console.firebase.google.com/" target="_blank" style="color: #4285f4;">Firebase Console</a>
+                        <br>2. Выберите ваш проект
+                        <br>3. Перейдите в Authentication → Настройки
+                        <br>4. Добавьте домен: <code>volodapatik.github.io</code>
+                    `;
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorElement.textContent = 'Проблемы с сетью. Проверьте подключение к интернету.';
+                } else {
+                    errorElement.textContent = `Ошибка авторизации: ${error.message}`;
+                }
             }
+        }
+
+        // Проверяем авторизованного пользователя при загрузке
+        function checkAuthState() {
+            if (!firebaseInitialized) return;
             
-            errorElement.textContent = 'Google авторизация доступна только на https сайте';
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // Пользователь авторизован через Firebase
+                    localStorage.setItem('user', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName,
+                        photoURL: user.photoURL
+                    }));
+                    updateAuthUI(user);
+                } else {
+                    // Проверяем локальное хранилище
+                    const savedUser = localStorage.getItem('user');
+                    if (savedUser) {
+                        try {
+                            const userData = JSON.parse(savedUser);
+                            updateAuthUIFromStorage(userData);
+                        } catch (e) {
+                            console.error('Ошибка парсинга user data:', e);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Обновление UI для авторизованного пользователя
+        function updateAuthUI(user) {
+            const authSection = document.getElementById('authSection');
+            
+            if (user) {
+                const name = user.displayName || user.email.split('@')[0];
+                const firstLetter = name.charAt(0).toUpperCase();
+                
+                authSection.innerHTML = `
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${name}">` : firstLetter}
+                        </div>
+                        <div class="user-name">${name}</div>
+                        <div class="user-menu" id="userMenu">
+                            <div class="user-info">
+                                <div style="font-weight: 600;">${name}</div>
+                                <div class="user-email">${user.email}</div>
+                            </div>
+                            <div class="menu-item logout" onclick="logout()">
+                                <span>🚪</span>
+                                <span>Выйти</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                authSection.innerHTML = `
+                    <button class="auth-btn" onclick="showAuthModal()">Войти</button>
+                `;
+            }
+        }
+
+        function updateAuthUIFromStorage(userData) {
+            const authSection = document.getElementById('authSection');
+            const name = userData.name || userData.email.split('@')[0];
+            const firstLetter = name.charAt(0).toUpperCase();
+            
+            authSection.innerHTML = `
+                <div class="user-profile" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        ${userData.photoURL ? `<img src="${userData.photoURL}" alt="${name}">` : firstLetter}
+                    </div>
+                    <div class="user-name">${name}</div>
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-info">
+                            <div style="font-weight: 600;">${name}</div>
+                            <div class="user-email">${userData.email}</div>
+                        </div>
+                        <div class="menu-item logout" onclick="logout()">
+                            <span>🚪</span>
+                            <span>Выйти</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            if (menu) {
+                menu.classList.toggle('show');
+            }
+        }
+
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('userMenu');
+            const profile = document.querySelector('.user-profile');
+            
+            if (menu && profile && !profile.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
+        async function logout() {
+            try {
+                if (firebaseInitialized) {
+                    await firebase.auth().signOut();
+                }
+                localStorage.removeItem('user');
+                updateAuthUI(null);
+                showNotification('👋 Вы вышли из системы');
+                
+                // Закрываем меню
+                const menu = document.getElementById('userMenu');
+                if (menu) {
+                    menu.classList.remove('show');
+                }
+            } catch (error) {
+                console.error('Ошибка выхода:', error);
+                showNotification('❌ Ошибка при выходе из системы');
+            }
         }
 
         function registerWithEmail() {
@@ -2112,10 +2381,27 @@
 
         // Инициализация
         window.addEventListener('load', function() {
+            // Инициализируем Firebase
+            initFirebase();
+            
+            // Инициализируем приложение
             switchMode('browser');
+            
+            // Настраиваем обработчик Enter в поиске
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') performSearch();
             });
+            
+            // Проверяем пользователя в localStorage
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                try {
+                    const userData = JSON.parse(savedUser);
+                    updateAuthUIFromStorage(userData);
+                } catch (e) {
+                    console.error('Ошибка загрузки пользователя:', e);
+                }
+            }
         });
     </script>
 </body>
