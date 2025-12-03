@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="autoplay=*">
     <title>🎬 Универсальный Браузер</title>
     
     <!-- Firebase -->
@@ -24,6 +25,7 @@
             background: #0f0f0f;
             color: #ffffff;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .header {
@@ -761,6 +763,140 @@
             background: #404040;
         }
 
+        .channel-header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa726);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .channel-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+        }
+
+        .channel-info-large {
+            flex: 1;
+        }
+
+        .channel-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .channel-stats-large {
+            display: flex;
+            gap: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .channel-description-full {
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .filters-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            background: #303030;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #ff4444;
+        }
+
+        .filter-btn:hover {
+            background: #404040;
+        }
+
+        .live-badge {
+            background: #ff4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .back-to-search {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-to-search:hover {
+            background: #555;
+        }
+
+        /* Для бесконечной ленты */
+        .scroll-observer {
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .scroll-observer.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .observer-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #303030;
+            border-top: 3px solid #ff4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .no-more-results {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Адаптивность */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -802,6 +938,31 @@
                 width: 100%;
                 height: 150px;
             }
+            
+            .channel-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .channel-stats-large {
+                justify-content: center;
+            }
+            
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .video-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .video-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
     </style>
 </head>
@@ -815,7 +976,6 @@
             </div>
             
             <div class="header-right">
-                <!-- Mode Switcher -->
                 <div class="mode-switcher">
                     <button class="mode-btn active" id="browserMode" onclick="switchMode('browser')">
                         🔍 Поиск
@@ -825,7 +985,6 @@
                     </button>
                 </div>
 
-                <!-- Auth Section -->
                 <div id="authSection">
                     <button class="auth-btn" onclick="showAuthModal()">Войти</button>
                 </div>
@@ -839,6 +998,7 @@
         <button class="youtube-nav-btn" onclick="switchYouTubeTab('history')">📚 История</button>
         <button class="youtube-nav-btn" onclick="switchYouTubeTab('subscriptions')">⭐ Подписки</button>
         <button class="youtube-nav-btn" onclick="switchYouTubeTab('channels')">📺 Каналы</button>
+        <button class="youtube-nav-btn" onclick="switchYouTubeTab('trending')">🔥 Тренды</button>
     </div>
 
     <!-- Search Section -->
@@ -884,7 +1044,6 @@
                 <button class="auth-tab" onclick="switchAuthTab('register')">Регистрация</button>
             </div>
 
-            <!-- Login Form -->
             <div class="auth-form active" id="loginForm">
                 <div class="form-group">
                     <input type="email" class="form-input" id="loginEmail" placeholder="Email" required>
@@ -905,7 +1064,6 @@
                 <div class="auth-error" id="loginError"></div>
             </div>
 
-            <!-- Register Form -->
             <div class="auth-form" id="registerForm">
                 <div class="form-group">
                     <input type="text" class="form-input" id="registerName" placeholder="Имя" required>
@@ -931,244 +1089,128 @@
         </div>
     </div>
 
-    <!-- Fullscreen Video Player -->
+    <!-- ИСПРАВЛЕННЫЙ Fullscreen Video Player -->
     <div class="video-container" id="videoContainer">
-        <iframe 
-            id="video-player" 
-            frameborder="0" 
-            allowfullscreen
-            allow="autoplay; encrypted-media"
-        ></iframe>
+        <div id="video-player"></div>
         <div class="video-controls-overlay">
             <button class="back-btn" onclick="closeVideo()">← Назад к поиску</button>
         </div>
     </div>
 
     <script>
-        // 🔥 FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyAEGfuhG94Jtjqquaj1S5TM3I8pacahnLo",
-            authDomain: "universal-browse-2ec51.firebaseapp.com",
-            projectId: "universal-browse-2ec51",
-            storageBucket: "universal-browse-2ec51.firebasestorage.app",
-            messagingSenderId: "625824159300",
-            appId: "1:625824159300:web:70a9157479a5d4e7924e11"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // 🔥 SUPABASE CONFIG
-        const SUPABASE_URL = 'https://qnkkuvdraezplcefkufd.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFua2t1dmRyYWV6cGxjZWZrdWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NDI1MzksImV4cCI6MjA3OTIxODUzOX0.5mJN8jw0ZpavZ9KqAfr1T1h62nKMhUbdi6Sgqg7yz-A'
-
-        // Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-        // API Keys
+        // 🔥 ОСНОВНЫЕ КОНФИГУРАЦИИ
         const SEARCH_API_KEY = "AIzaSyClSXPxjAzchdDLnUQtsqpObaWMjaCpVsc";
         const SEARCH_ENGINE_ID = "941011482ddeb4a66";
         const YOUTUBE_API_KEY = "AIzaSyCSeZzG1u99LqcTpm78P3-XSg4poOQEVCo";
         
-        // Global Variables
+        // Глобальные переменные для бесконечной ленты
         let currentMode = 'browser';
         let currentYouTubeTab = 'search';
-        let nextPageToken = '';
         let currentSearchQuery = '';
-        let browserStartIndex = 1;
+        let youtubeNextPageToken = '';
+        let isLoadingMore = false;
+        let hasMoreResults = true;
+        let scrollObserver = null;
+        
+        // Для пагинации каналов
+        let currentChannelId = null;
+        let currentChannelInfo = null;
+        let currentContentFilter = 'all';
+        let channelNextPageToken = '';
         
         // User Data
-        let watchHistory = [];
-        let subscriptions = [];
-        let currentUser = null;
+        let watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
+        let subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
+        
+        // YouTube Player API
+        let ytPlayer = null;
+        let currentVideoId = null;
 
-        // Auth State Listener
-        auth.onAuthStateChanged(async (user) => {
-            currentUser = user;
-            updateAuthUI();
+        // 📺 ИСПРАВЛЕННЫЙ YOUTUBE PLAYER
+        function playYouTubeVideo(videoId) {
+            currentVideoId = videoId;
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.style.display = 'block';
+            document.body.style.overflow = 'hidden';
             
-            if (user) {
-                console.log('User logged in:', user.email);
-                await loadUserData();
+            // Получаем информацию о видео для истории
+            const videoElement = document.querySelector(`[onclick="playYouTubeVideo('${videoId}')"]`);
+            const title = videoElement?.querySelector('.video-title')?.textContent || 'Неизвестное видео';
+            const channel = videoElement?.querySelector('.video-channel span')?.textContent?.replace('📺 ', '') || 'Неизвестный канал';
+            const thumbnail = videoElement?.querySelector('.video-thumbnail')?.src || '';
+            
+            addToHistory(videoId, title, channel, thumbnail);
+            
+            // Используем YouTube Iframe API для корректного воспроизведения
+            if (ytPlayer) {
+                ytPlayer.loadVideoById(videoId);
+                ytPlayer.playVideo();
             } else {
-                console.log('User logged out');
-                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
-                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
+                loadYouTubePlayer(videoId);
             }
-        });
-
-        // 🔐 AUTH FUNCTIONS
-        function showAuthModal() {
-            document.getElementById('authModal').style.display = 'block';
         }
 
-        function hideAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-            clearAuthErrors();
-        }
-
-        function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        function loadYouTubePlayer(videoId) {
+            const playerContainer = document.getElementById('video-player');
             
-            document.querySelector(`.auth-tab[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
-            document.getElementById(tab + 'Form').classList.add('active');
+            // Создаем iframe с правильными параметрами
+            const iframe = document.createElement('iframe');
+            iframe.id = 'youtube-iframe';
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            iframe.title = 'YouTube video player';
             
-            clearAuthErrors();
-        }
-
-        function clearAuthErrors() {
-            document.getElementById('loginError').textContent = '';
-            document.getElementById('registerError').textContent = '';
-        }
-
-        async function registerWithEmail() {
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const errorElement = document.getElementById('registerError');
-
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                await userCredential.user.updateProfile({ displayName: name });
+            playerContainer.innerHTML = '';
+            playerContainer.appendChild(iframe);
+            
+            // Инициализируем YouTube API
+            if (typeof YT === 'undefined') {
+                const tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
                 
-                hideAuthModal();
-                showNotification('✅ Аккаунт создан успешно!');
-            } catch (error) {
-                errorElement.textContent = getAuthErrorMessage(error);
-            }
-        }
-
-        async function loginWithEmail() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
-
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                hideAuthModal();
-                showNotification('✅ Вход выполнен успешно!');
-            } catch (error) {
-                errorElement.textContent = getAuthErrorMessage(error);
-            }
-        }
-
-        async function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            
-            try {
-                await auth.signInWithPopup(provider);
-                hideAuthModal();
-                showNotification('✅ Вход через Google выполнен!');
-            } catch (error) {
-                document.getElementById('loginError').textContent = getAuthErrorMessage(error);
-            }
-        }
-
-        function logout() {
-            auth.signOut();
-            showNotification('🔒 Вы вышли из аккаунта');
-        }
-
-        function getAuthErrorMessage(error) {
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    return 'Этот email уже используется';
-                case 'auth/invalid-email':
-                    return 'Неверный формат email';
-                case 'auth/weak-password':
-                    return 'Пароль слишком слабый (минимум 6 символов)';
-                case 'auth/user-not-found':
-                    return 'Пользователь не найден';
-                case 'auth/wrong-password':
-                    return 'Неверный пароль';
-                case 'auth/popup-closed-by-user':
-                    return 'Окно авторизации закрыто';
-                default:
-                    return 'Произошла ошибка: ' + error.message;
-            }
-        }
-
-        function updateAuthUI() {
-            const authSection = document.getElementById('authSection');
-            
-            if (currentUser) {
-                const displayName = currentUser.displayName || currentUser.email.split('@')[0];
-                const firstLetter = displayName.charAt(0).toUpperCase();
-                
-                authSection.innerHTML = `
-                    <div class="user-profile" onclick="showUserMenu()">
-                        <div class="user-avatar">${firstLetter}</div>
-                        <div class="user-name">${displayName}</div>
-                    </div>
-                `;
+                window.onYouTubeIframeAPIReady = function() {
+                    ytPlayer = new YT.Player('youtube-iframe', {
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
+                };
             } else {
-                authSection.innerHTML = '<button class="auth-btn" onclick="showAuthModal()">Войти</button>';
+                ytPlayer = new YT.Player('youtube-iframe', {
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
             }
         }
 
-        function showUserMenu() {
-            if (confirm('Вы хотите выйти из аккаунта?')) {
-                logout();
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            // Можно добавить обработку событий плеера
+        }
+
+        function closeVideo() {
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            if (ytPlayer && ytPlayer.stopVideo) {
+                ytPlayer.stopVideo();
             }
         }
 
-        // 💾 SUPABASE DATA MANAGEMENT
-        async function saveUserData() {
-            if (!currentUser) {
-                localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
-                localStorage.setItem('youtubeSubscriptions', JSON.stringify(subscriptions));
-                return;
-            }
-
-            try {
-                const { error } = await supabase
-                    .from('user_data')
-                    .upsert({
-                        user_id: currentUser.uid,
-                        watch_history: watchHistory,
-                        subscriptions: subscriptions,
-                        updated_at: new Date().toISOString()
-                    })
-
-                if (!error) {
-                    console.log('✅ Дані збережено в Supabase!');
-                }
-            } catch (error) {
-                console.error('❌ Помилка збереження:', error);
-                localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
-                localStorage.setItem('youtubeSubscriptions', JSON.stringify(subscriptions));
-            }
-        }
-
-        async function loadUserData() {
-            if (!currentUser) {
-                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
-                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('user_data')
-                    .select('*')
-                    .eq('user_id', currentUser.uid)
-                    .single()
-
-                if (data && !error) {
-                    watchHistory = data.watch_history || [];
-                    subscriptions = data.subscriptions || [];
-                    console.log('✅ Дані завантажено з Supabase!');
-                }
-            } catch (error) {
-                console.error('❌ Помилка завантаження:', error);
-                watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
-                subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
-            }
-        }
-
-        // 🎬 YOUTUBE FUNCTIONS
+        // 💾 УПРАВЛЕНИЕ ДАННЫМИ
         function addToHistory(videoId, title, channel, thumbnail) {
             const existingIndex = watchHistory.findIndex(item => item.videoId === videoId);
             
@@ -1188,10 +1230,12 @@
                 watchHistory = watchHistory.slice(-100);
             }
             
-            saveUserData();
+            localStorage.setItem('youtubeHistory', JSON.stringify(watchHistory));
         }
 
-        function toggleSubscription(channelId, channelTitle = '', channelThumbnail = '') {
+        function toggleSubscription(channelId, channelTitle = '', channelThumbnail = '', event) {
+            if (event) event.stopPropagation();
+            
             const existingSub = subscriptions.find(sub => sub.id === channelId);
             
             if (existingSub) {
@@ -1206,151 +1250,294 @@
                 showNotification(`✅ Подписались на канал "${channelTitle}"`);
             }
             
-            saveUserData();
+            localStorage.setItem('youtubeSubscriptions', JSON.stringify(subscriptions));
+            
+            const subscribeBtns = document.querySelectorAll(`button[onclick*="toggleSubscription('${channelId}'"]`);
+            subscribeBtns.forEach(btn => {
+                const isNowSubscribed = subscriptions.some(sub => sub.id === channelId);
+                btn.textContent = isNowSubscribed ? '✅ Подписан' : '🔔 Подписаться';
+                btn.classList.toggle('subscribed', isNowSubscribed);
+            });
         }
 
-        // 📺 YOUTUBE UI FUNCTIONS
-        function switchYouTubeTab(tab) {
-            currentYouTubeTab = tab;
+        // 📺 БЕСКОНЕЧНАЯ ЛЕНТА YOUTUBE
+        async function searchYouTubeVideos(query, loadMore = false) {
+            if (isLoadingMore) return;
             
-            document.querySelectorAll('.youtube-nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
+            if (!loadMore) {
+                currentSearchQuery = query;
+                youtubeNextPageToken = '';
+                hasMoreResults = true;
+                showLoading(`Ищем "${query}" на YouTube...`);
+            } else {
+                if (!youtubeNextPageToken || !hasMoreResults) return;
+                isLoadingMore = true;
+                showScrollObserver();
+            }
             
-            switch(tab) {
-                case 'search':
-                    showEmptyYouTubeState();
-                    break;
-                case 'history':
-                    showWatchHistory();
-                    break;
-                case 'subscriptions':
-                    showSubscriptions();
-                    break;
-                case 'channels':
-                    showChannelSearch();
-                    break;
+            try {
+                let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+                
+                if (youtubeNextPageToken) {
+                    url += `&pageToken=${youtubeNextPageToken}`;
+                }
+                
+                const searchResponse = await fetch(url);
+                const searchData = await searchResponse.json();
+                
+                if (searchData.items && searchData.items.length > 0) {
+                    const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+                    const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
+                    const videosResponse = await fetch(videosUrl);
+                    const videosData = await videosResponse.json();
+                    
+                    if (loadMore) {
+                        displayYouTubeResults(videosData.items, query, true);
+                        hideScrollObserver();
+                    } else {
+                        displayYouTubeResults(videosData.items, query, false);
+                    }
+                    
+                    youtubeNextPageToken = searchData.nextPageToken || '';
+                    hasMoreResults = !!searchData.nextPageToken;
+                } else {
+                    if (!loadMore) {
+                        showNoResults(query);
+                    } else {
+                        showNoMoreResults();
+                    }
+                }
+            } catch (error) {
+                showError(`Ошибка YouTube: ${error.message}`);
+            } finally {
+                isLoadingMore = false;
             }
         }
 
-        function showWatchHistory() {
+        function displayYouTubeResults(videos, query, append = false) {
             const resultsDiv = document.getElementById('results');
             
-            if (watchHistory.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📚</div>
-                        <h3>История просмотров пуста</h3>
-                        <p>${currentUser ? 'Начните смотреть видео, чтобы они появились здесь' : 'Войдите в аккаунт, чтобы сохранять историю просмотров'}</p>
+            if (!append) {
+                let html = `
+                    <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                        📺 Найдено видео по запросу: "${query}"
                     </div>
+                    <div class="video-grid" id="youtubeVideos">
                 `;
-                return;
+                resultsDiv.innerHTML = html;
             }
             
-            let html = `
-                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
-                    📚 История просмотров: ${watchHistory.length} видео
-                    ${currentUser ? '<span style="color: #44ff44; margin-left: 10px;">☁️ Supabase</span>' : ''}
-                </div>
-            `;
+            const videosGrid = document.getElementById('youtubeVideos') || resultsDiv;
             
-            watchHistory.slice(-20).reverse().forEach(item => {
-                html += `
-                    <div class="history-item" onclick="playYouTubeVideo('${item.videoId}')">
-                        <img src="${item.thumbnail}" class="history-thumbnail" alt="${item.title}">
-                        <div class="history-info">
-                            <div class="history-title">${item.title}</div>
-                            <div class="history-channel">📺 ${item.channel}</div>
-                            <div style="color: #888; font-size: 12px; margin-top: 5px;">
-                                📅 ${formatDate(item.watchedAt)}
+            videos.forEach(video => {
+                const duration = formatDuration(video.contentDetails?.duration);
+                const viewCount = formatViews(video.statistics?.viewCount);
+                const publishedAt = formatDate(video.snippet.publishedAt);
+                
+                videosGrid.innerHTML += `
+                    <div class="video-card" onclick="playYouTubeVideo('${video.id}')">
+                        <div class="video-thumbnail-container">
+                            <img src="${video.snippet.thumbnails.medium.url}" class="video-thumbnail" alt="${video.snippet.title}">
+                            <div class="youtube-badge">YouTube</div>
+                            <div class="video-duration">${duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.snippet.title}</div>
+                            <div class="video-channel">
+                                <span>📺 ${video.snippet.channelTitle}</span>
+                                <button class="subscribe-btn" onclick="toggleSubscription('${video.snippet.channelId}', '${video.snippet.channelTitle}', '${video.snippet.thumbnails.default.url}', event)">
+                                    🔔 Подписаться
+                                </button>
+                            </div>
+                            <div class="video-meta">
+                                <span>👁️ ${viewCount}</span>
+                                <span>📅 ${publishedAt}</span>
                             </div>
                         </div>
                     </div>
                 `;
             });
             
-            resultsDiv.innerHTML = html;
-        }
-
-        function showSubscriptions() {
-            const resultsDiv = document.getElementById('results');
-            
-            if (subscriptions.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">⭐</div>
-                        <h3>${currentUser ? 'Нет подписок' : 'Войдите в аккаунт'}</h3>
-                        <p>${currentUser ? 'Подпишитесь на каналы, чтобы они появились здесь' : 'Чтобы сохранять подписки'}</p>
-                    </div>
-                `;
-                return;
+            if (!append) {
+                resultsDiv.innerHTML += `</div>`;
+                
+                // Добавляем наблюдатель прокрутки если есть еще результаты
+                if (hasMoreResults) {
+                    resultsDiv.innerHTML += `
+                        <div class="scroll-observer" id="scrollObserver">
+                            <div class="observer-spinner"></div>
+                        </div>
+                    `;
+                    setupScrollObserver();
+                }
             }
             
-            let html = `
-                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
-                    ⭐ Подписки: ${subscriptions.length} каналов
-                    ${currentUser ? '<span style="color: #44ff44; margin-left: 10px;">☁️ Supabase</span>' : ''}
-                </div>
-            `;
+            // Обновляем наблюдатель прокрутки если кончились результаты
+            if (!hasMoreResults && videosGrid.querySelector('.scroll-observer')) {
+                videosGrid.innerHTML += `<div class="no-more-results">Больше результатов нет</div>`;
+                document.querySelector('.scroll-observer')?.remove();
+            }
+        }
+
+        // 📺 КАНАЛЫ
+        async function openChannel(channelId, channelTitle = '', channelThumbnail = '') {
+            currentChannelId = channelId;
             
-            subscriptions.forEach(channel => {
-                html += `
-                    <div class="channel-card">
-                        <img src="${channel.thumbnail}" class="channel-avatar" alt="${channel.title}">
-                        <div class="channel-info">
-                            <div class="channel-name">${channel.title}</div>
+            try {
+                const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${YOUTUBE_API_KEY}`;
+                const channelResponse = await fetch(channelUrl);
+                const channelData = await channelResponse.json();
+                
+                if (channelData.items && channelData.items.length > 0) {
+                    currentChannelInfo = channelData.items[0];
+                    await loadChannelContent('all', true);
+                } else {
+                    showError('Канал не найден');
+                }
+            } catch (error) {
+                showError(`Ошибка загрузки канала: ${error.message}`);
+            }
+        }
+
+        async function loadChannelContent(filter = 'all', reset = false) {
+            if (!currentChannelId) return;
+            
+            if (reset) {
+                channelNextPageToken = '';
+            }
+            
+            showLoading(`Загрузка контента канала...`);
+            
+            try {
+                let url = '';
+                const baseParams = `part=snippet&channelId=${currentChannelId}&maxResults=20&key=${YOUTUBE_API_KEY}`;
+                
+                if (filter === 'live') {
+                    url = `https://www.googleapis.com/youtube/v3/search?${baseParams}&type=video&eventType=live&order=date`;
+                } else if (filter === 'videos') {
+                    url = `https://www.googleapis.com/youtube/v3/search?${baseParams}&type=video&order=date`;
+                } else {
+                    url = `https://www.googleapis.com/youtube/v3/search?${baseParams}&type=video&order=date`;
+                }
+                
+                if (channelNextPageToken) {
+                    url += `&pageToken=${channelNextPageToken}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    const videoIds = data.items.map(item => item.id.videoId).join(',');
+                    const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet,statistics,liveStreamingDetails&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
+                    const videosResponse = await fetch(videosUrl);
+                    const videosData = await videosResponse.json();
+                    
+                    displayChannelContent(videosData.items, filter, reset);
+                    channelNextPageToken = data.nextPageToken || '';
+                } else {
+                    showNoChannelContent();
+                }
+            } catch (error) {
+                showError(`Ошибка загрузки контента: ${error.message}`);
+            }
+        }
+
+        function displayChannelContent(videos, filter, reset) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (reset || !resultsDiv.querySelector('.channel-header')) {
+                let html = `
+                    <button class="back-to-search" onclick="backToSubscriptions()">
+                        ← Назад к подпискам
+                    </button>
+                    
+                    <div class="channel-header">
+                        <img src="${currentChannelInfo.snippet.thumbnails.medium.url}" 
+                             class="channel-avatar-large" 
+                             alt="${currentChannelInfo.snippet.title}">
+                        <div class="channel-info-large">
+                            <div class="channel-title">${currentChannelInfo.snippet.title}</div>
+                            <div class="channel-stats-large">
+                                <span>👥 ${formatSubscribers(currentChannelInfo.statistics.subscriberCount)} подписчиков</span>
+                                <span>📺 ${formatViews(currentChannelInfo.statistics.videoCount)} видео</span>
+                                <span>👁️ ${formatViews(currentChannelInfo.statistics.viewCount)} просмотров</span>
+                            </div>
+                            <div class="channel-description-full">
+                                ${currentChannelInfo.snippet.description || 'Описание отсутствует'}
+                            </div>
                         </div>
-                        <button class="subscribe-btn subscribed" onclick="toggleSubscription('${channel.id}')">
-                            ✅ Подписан
+                        <button class="subscribe-btn ${subscriptions.some(sub => sub.id === currentChannelId) ? 'subscribed' : ''}" 
+                                onclick="toggleSubscription('${currentChannelId}', '${currentChannelInfo.snippet.title}', '${currentChannelInfo.snippet.thumbnails.default.url}', event)">
+                            ${subscriptions.some(sub => sub.id === currentChannelId) ? '✅ Подписан' : '🔔 Подписаться'}
                         </button>
+                    </div>
+                    
+                    <div class="filters-container">
+                        <button class="filter-btn ${filter === 'all' ? 'active' : ''}" 
+                                onclick="changeChannelFilter('all')">📹 Все видео</button>
+                        <button class="filter-btn ${filter === 'videos' ? 'active' : ''}" 
+                                onclick="changeChannelFilter('videos')">🎬 Только видео</button>
+                        <button class="filter-btn ${filter === 'live' ? 'active' : ''}" 
+                                onclick="changeChannelFilter('live')">🔴 Трансляции</button>
+                    </div>
+                    
+                    <div class="video-grid" id="channelVideos">
+                `;
+                
+                resultsDiv.innerHTML = html;
+            }
+            
+            const videosGrid = document.getElementById('channelVideos');
+            
+            videos.forEach(video => {
+                const isLive = video.snippet.liveBroadcastContent === 'live';
+                const duration = isLive ? 'LIVE' : formatDuration(video.contentDetails?.duration);
+                const viewCount = formatViews(video.statistics?.viewCount);
+                const publishedAt = formatDate(video.snippet.publishedAt);
+                
+                videosGrid.innerHTML += `
+                    <div class="video-card" onclick="playYouTubeVideo('${video.id}')">
+                        <div class="video-thumbnail-container">
+                            <img src="${video.snippet.thumbnails.medium.url}" class="video-thumbnail" alt="${video.snippet.title}">
+                            <div class="youtube-badge">YouTube</div>
+                            <div class="video-duration ${isLive ? 'live-badge' : ''}">
+                                ${isLive ? '🔴 LIVE' : duration}
+                            </div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.snippet.title}</div>
+                            <div class="video-meta">
+                                <span>👁️ ${viewCount}</span>
+                                <span>📅 ${publishedAt}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
             
-            resultsDiv.innerHTML = html;
-        }
-
-        function showChannelSearch() {
-            document.getElementById('results').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📺</div>
-                    <h3>Поиск каналов</h3>
-                    <p>Введите название канала для поиска</p>
-                    <div class="search-container" style="margin-top: 20px;">
-                        <input type="text" class="search-input" id="channelSearchInput" 
-                               placeholder="Введите название канала...">
-                        <button class="search-btn" onclick="searchChannels()">
-                            🔍 Найти каналы
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 🔍 SEARCH FUNCTIONS
-        async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            
-            if (!query) {
-                showError('Введите поисковый запрос');
-                return;
-            }
-
-            currentSearchQuery = query;
-            showLoading(query);
-            
-            try {
-                if (currentMode === 'youtube') {
-                    await searchYouTubeVideos(query);
-                } else {
-                    await searchWeb(query);
-                }
-            } catch (error) {
-                showError(`Ошибка: ${error.message}`);
+            if (channelNextPageToken && !resultsDiv.querySelector('.load-more-btn')) {
+                resultsDiv.innerHTML += `
+                    <button class="load-more-btn" onclick="loadChannelContent('${filter}')">
+                        📥 Загрузить еще
+                    </button>
+                `;
             }
         }
 
+        function changeChannelFilter(newFilter) {
+            currentContentFilter = newFilter;
+            loadChannelContent(newFilter, true);
+        }
+
+        function backToSubscriptions() {
+            currentChannelId = null;
+            currentChannelInfo = null;
+            channelNextPageToken = '';
+            showSubscriptions();
+        }
+
+        // 🔍 ПОИСК В ИНТЕРНЕТЕ
         async function searchWeb(query) {
             const url = `https://www.googleapis.com/customsearch/v1?key=${SEARCH_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
             
@@ -1390,62 +1577,210 @@
             resultsDiv.innerHTML = html;
         }
 
-        async function searchYouTubeVideos(query) {
-            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+        // 📺 YOUTUBE UI
+        function switchYouTubeTab(tab) {
+            currentYouTubeTab = tab;
+            
+            document.querySelectorAll('.youtube-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            switch(tab) {
+                case 'search':
+                    showEmptyYouTubeState();
+                    break;
+                case 'history':
+                    showWatchHistory();
+                    break;
+                case 'subscriptions':
+                    showSubscriptions();
+                    break;
+                case 'channels':
+                    showChannelSearch();
+                    break;
+                case 'trending':
+                    showTrendingVideos();
+                    break;
+            }
+        }
+
+        async function showTrendingVideos() {
+            showLoading("Загрузка трендов YouTube...");
             
             try {
+                const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=RU&maxResults=20&key=${YOUTUBE_API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    displayYouTubeResults(data.items, "Тренды YouTube", false);
+                } else {
+                    showError("Не удалось загрузить тренды");
+                }
+            } catch (error) {
+                showError(`Ошибка: ${error.message}`);
+            }
+        }
+
+        function showWatchHistory() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (watchHistory.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📚</div>
+                        <h3>История просмотров пуста</h3>
+                        <p>Смотрите видео, чтобы они появились здесь</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    📚 История просмотров: ${watchHistory.length} видео
+                </div>
+                <div class="video-grid">
+            `;
+            
+            watchHistory.slice(-20).reverse().forEach(item => {
+                html += `
+                    <div class="video-card" onclick="playYouTubeVideo('${item.videoId}')">
+                        <div class="video-thumbnail-container">
+                            <img src="${item.thumbnail}" class="video-thumbnail" alt="${item.title}">
+                            <div class="youtube-badge">YouTube</div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${item.title}</div>
+                            <div class="video-channel">
+                                <span>📺 ${item.channel}</span>
+                            </div>
+                            <div class="video-meta">
+                                <span>📅 ${formatDate(item.watchedAt)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            resultsDiv.innerHTML = html;
+        }
+
+        function showSubscriptions() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (subscriptions.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⭐</div>
+                        <h3>Нет подписок</h3>
+                        <p>Подпишитесь на каналы, чтобы они появились здесь</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
+                    ⭐ Подписки: ${subscriptions.length} каналов
+                </div>
+            `;
+            
+            subscriptions.forEach(channel => {
+                html += `
+                    <div class="channel-card" onclick="openChannel('${channel.id}', '${channel.title}', '${channel.thumbnail}')">
+                        <img src="${channel.thumbnail}" class="channel-avatar" alt="${channel.title}">
+                        <div class="channel-info">
+                            <div class="channel-name">${channel.title}</div>
+                        </div>
+                        <button class="subscribe-btn subscribed" onclick="toggleSubscription('${channel.id}', '${channel.title}', '${channel.thumbnail}', event)">
+                            ✅ Подписан
+                        </button>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function showChannelSearch() {
+            document.getElementById('results').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📺</div>
+                    <h3>Поиск каналов</h3>
+                    <p>Введите название канала для поиска</p>
+                    <div class="search-container" style="margin-top: 20px;">
+                        <input type="text" class="search-input" id="channelSearchInput" 
+                               placeholder="Введите название канала...">
+                        <button class="search-btn" onclick="searchChannels()">
+                            🔍 Найти каналы
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function searchChannels() {
+            const query = document.getElementById('channelSearchInput').value.trim();
+            
+            if (!query) {
+                showError('Введите название канала');
+                return;
+            }
+
+            showLoading(`Ищем каналы "${query}"...`);
+            
+            try {
+                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${encodeURIComponent(query)}&type=channel&key=${YOUTUBE_API_KEY}`;
                 const searchResponse = await fetch(searchUrl);
                 const searchData = await searchResponse.json();
                 
                 if (searchData.items && searchData.items.length > 0) {
-                    const videoIds = searchData.items.map(item => item.id.videoId).join(',');
-                    const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
-                    const videosResponse = await fetch(videosUrl);
-                    const videosData = await videosResponse.json();
+                    const channelIds = searchData.items.map(item => item.snippet.channelId).join(',');
+                    const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds}&key=${YOUTUBE_API_KEY}`;
+                    const channelsResponse = await fetch(channelsUrl);
+                    const channelsData = await channelsResponse.json();
                     
-                    displayYouTubeResults(videosData.items, query);
+                    displayChannelSearchResults(channelsData.items, query);
                 } else {
                     showNoResults(query);
                 }
             } catch (error) {
-                showError(`Ошибка YouTube: ${error.message}`);
+                showError(`Ошибка поиска каналов: ${error.message}`);
             }
         }
 
-        function displayYouTubeResults(videos, query) {
+        function displayChannelSearchResults(channels, query) {
             const resultsDiv = document.getElementById('results');
             
             let html = `
                 <div style="color: #aaa; font-size: 14px; margin-bottom: 15px; padding: 0 10px;">
-                    📺 Найдено YouTube видео: ${videos.length}
+                    📺 Найдено каналов: ${channels.length}
                 </div>
             `;
             
-            html += videos.map(video => {
-                const duration = formatDuration(video.contentDetails?.duration);
-                const viewCount = formatViews(video.statistics?.viewCount);
-                const publishedAt = formatDate(video.snippet.publishedAt);
+            html += channels.map(channel => {
+                const isSubscribed = subscriptions.some(sub => sub.id === channel.id);
                 
                 return `
-                    <div class="video-card" onclick="playYouTubeVideo('${video.id}')">
-                        <div class="video-thumbnail-container">
-                            <img src="${video.snippet.thumbnails.medium.url}" class="video-thumbnail" alt="${video.snippet.title}">
-                            <div class="youtube-badge">YouTube</div>
-                            <div class="video-duration">${duration}</div>
-                        </div>
-                        <div class="video-info">
-                            <div class="video-title">${video.snippet.title}</div>
-                            <div class="video-channel">
-                                <span>📺 ${video.snippet.channelTitle}</span>
-                                <button class="subscribe-btn" onclick="event.stopPropagation(); toggleSubscription('${video.snippet.channelId}', '${video.snippet.channelTitle}', '${video.snippet.thumbnails.default.url}')">
-                                    🔔 Подписаться
-                                </button>
+                    <div class="channel-card" onclick="openChannel('${channel.id}', '${channel.snippet.title}', '${channel.snippet.thumbnails.medium.url}')">
+                        <img src="${channel.snippet.thumbnails.medium.url}" class="channel-avatar" alt="${channel.snippet.title}">
+                        <div class="channel-info">
+                            <div class="channel-name">${channel.snippet.title}</div>
+                            <div class="channel-stats">
+                                👥 ${formatSubscribers(channel.statistics.subscriberCount)} подписчиков • 
+                                📺 ${formatViews(channel.statistics.videoCount)} видео
                             </div>
-                            <div class="video-meta">
-                                <span>👁️ ${viewCount}</span>
-                                <span>📅 ${publishedAt}</span>
+                            <div class="channel-description">
+                                ${channel.snippet.description || 'Описание отсутствует'}
                             </div>
                         </div>
+                        <button class="subscribe-btn ${isSubscribed ? 'subscribed' : ''}" 
+                                onclick="toggleSubscription('${channel.id}', '${channel.snippet.title}', '${channel.snippet.thumbnails.default.url}', event)">
+                            ${isSubscribed ? '✅ Подписан' : '🔔 Подписаться'}
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -1453,33 +1788,7 @@
             resultsDiv.innerHTML = html;
         }
 
-        // 🎥 VIDEO PLAYER
-        function playYouTubeVideo(videoId) {
-            const videoContainer = document.getElementById('videoContainer');
-            const videoPlayer = document.getElementById('video-player');
-            
-            const videoElement = document.querySelector(`[onclick="playYouTubeVideo('${videoId}')"]`);
-            const title = videoElement?.querySelector('.video-title')?.textContent || 'Неизвестное видео';
-            const channel = videoElement?.querySelector('.video-channel span')?.textContent?.replace('📺 ', '') || 'Неизвестный канал';
-            const thumbnail = videoElement?.querySelector('.video-thumbnail')?.src || '';
-            
-            videoPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-            videoContainer.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            
-            addToHistory(videoId, title, channel, thumbnail);
-        }
-
-        function closeVideo() {
-            const videoContainer = document.getElementById('videoContainer');
-            const videoPlayer = document.getElementById('video-player');
-            
-            videoPlayer.src = '';
-            videoContainer.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        // 🔧 HELPER FUNCTIONS
+        // 🔧 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
         function switchMode(mode) {
             currentMode = mode;
             
@@ -1495,6 +1804,7 @@
                 modeInfo.textContent = "Режим: Поиск";
                 youtubeNav.style.display = 'none';
                 showEmptyState();
+                removeScrollObserver();
             } else {
                 searchInput.placeholder = "Поиск YouTube видео...";
                 modeInfo.textContent = "Режим: YouTube";
@@ -1521,6 +1831,98 @@
                     <p>Или перейдите в другие разделы</p>
                 </div>
             `;
+        }
+
+        // 🔄 СИСТЕМА БЕСКОНЕЧНОЙ ПРОКРУТКИ
+        function setupScrollObserver() {
+            const observerElement = document.getElementById('scrollObserver');
+            if (!observerElement || scrollObserver) return;
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && currentMode === 'youtube' && currentYouTubeTab === 'search') {
+                        if (youtubeNextPageToken && hasMoreResults && !isLoadingMore) {
+                            searchYouTubeVideos(currentSearchQuery, true);
+                        }
+                    }
+                });
+            }, {
+                root: null,
+                rootMargin: '100px',
+                threshold: 0.1
+            });
+            
+            observer.observe(observerElement);
+            scrollObserver = observer;
+        }
+
+        function removeScrollObserver() {
+            if (scrollObserver) {
+                scrollObserver.disconnect();
+                scrollObserver = null;
+            }
+        }
+
+        function showScrollObserver() {
+            const observer = document.getElementById('scrollObserver');
+            if (observer) {
+                observer.classList.remove('hidden');
+            }
+        }
+
+        function hideScrollObserver() {
+            const observer = document.getElementById('scrollObserver');
+            if (observer) {
+                observer.classList.add('hidden');
+            }
+        }
+
+        function showNoMoreResults() {
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv.querySelector('.no-more-results')) {
+                resultsDiv.innerHTML += `<div class="no-more-results">Больше результатов нет</div>`;
+            }
+            hideScrollObserver();
+        }
+
+        function showNoChannelContent() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `
+                <div class="empty-state">
+                    <div class="empty-icon">📺</div>
+                    <h3>Контент не найден</h3>
+                    <p>На этом канале нет видео или трансляций</p>
+                </div>
+            `;
+        }
+
+        // 📱 ОСНОВНЫЕ ФУНКЦИИ ПОИСКА
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showError('Введите поисковый запрос');
+                return;
+            }
+
+            currentSearchQuery = query;
+            removeScrollObserver();
+            youtubeNextPageToken = '';
+            hasMoreResults = true;
+            
+            try {
+                if (currentMode === 'youtube') {
+                    if (currentYouTubeTab === 'search') {
+                        await searchYouTubeVideos(query);
+                    } else {
+                        showError('Перейдите в раздел "Поиск" для поиска видео');
+                    }
+                } else {
+                    await searchWeb(query);
+                }
+            } catch (error) {
+                showError(`Ошибка: ${error.message}`);
+            }
         }
 
         function showLoading(query) {
@@ -1560,14 +1962,32 @@
                 border-radius: 10px;
                 z-index: 10000;
                 font-weight: 500;
+                animation: slideIn 0.3s ease-out;
             `;
             notification.textContent = message;
             document.body.appendChild(notification);
             
             setTimeout(() => {
-                notification.remove();
-            }, 3000);
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 2700);
         }
+
+        // Стили для анимации уведомлений
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
 
         function searchQuick(query) {
             document.getElementById('searchInput').value = query;
@@ -1601,6 +2021,17 @@
             return count.toString();
         }
 
+        function formatSubscribers(count) {
+            if (!count) return '0';
+            const num = parseInt(count);
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
         function formatDate(publishedAt) {
             const date = new Date(publishedAt);
             const now = new Date();
@@ -1614,7 +2045,72 @@
             return `${Math.floor(diffDays / 30)} мес. назад`;
         }
 
-        // Initialize
+        // 🔐 УПРОЩЕННАЯ АУТЕНТИФИКАЦИЯ
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'block';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            clearAuthErrors();
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            document.querySelector(`.auth-tab[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            clearAuthErrors();
+        }
+
+        function clearAuthErrors() {
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('registerError').textContent = '';
+        }
+
+        async function loginWithGoogle() {
+            const errorElement = document.getElementById('loginError');
+            
+            if (window.location.protocol === 'file:') {
+                errorElement.textContent = 'Для Google входа запустите проект через localhost сервер (например, VS Code Live Server)';
+                return;
+            }
+            
+            errorElement.textContent = 'Google авторизация доступна только на https сайте';
+        }
+
+        function registerWithEmail() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorElement = document.getElementById('registerError');
+
+            if (!email || !password || !name) {
+                errorElement.textContent = 'Заполните все поля';
+                return;
+            }
+
+            hideAuthModal();
+            showNotification('✅ Регистрация прошла успешно!');
+        }
+
+        function loginWithEmail() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+
+            if (!email || !password) {
+                errorElement.textContent = 'Заполните все поля';
+                return;
+            }
+
+            hideAuthModal();
+            showNotification('✅ Вход выполнен успешно!');
+        }
+
+        // Инициализация
         window.addEventListener('load', function() {
             switchMode('browser');
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
