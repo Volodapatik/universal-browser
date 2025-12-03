@@ -98,6 +98,13 @@
             font-size: 14px;
         }
 
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
         .user-name {
             font-size: 14px;
             font-weight: 500;
@@ -1056,6 +1063,7 @@
                 </div>
                 
                 <button class="google-auth" onclick="loginWithGoogle()">
+                    <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 18px; height: 18px;">
                     <span>Войти через Google</span>
                 </button>
                 
@@ -1079,6 +1087,7 @@
                 </div>
                 
                 <button class="google-auth" onclick="loginWithGoogle()">
+                    <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 18px; height: 18px;">
                     <span>Войти через Google</span>
                 </button>
                 
@@ -1103,6 +1112,7 @@
 
         // 🔐 ВАШ OAuth Client ID
         const OAUTH_CLIENT_ID = "228878747798-e8j3nprs785rsalu8gns1hlq6goeb42q.apps.googleusercontent.com";
+        const REDIRECT_URI = "https://volodapatik.github.io/universal-browser/";
         
         // Глобальные переменные для бесконечной ленты
         let currentMode = 'browser';
@@ -1119,22 +1129,22 @@
         let currentContentFilter = 'all';
         let channelNextPageToken = '';
         
-        // User Data - ВСЕ ТВОИ ДАННЫЕ ОСТАЮТСЯ
+        // User Data
         let watchHistory = JSON.parse(localStorage.getItem('youtubeHistory')) || [];
         let subscriptions = JSON.parse(localStorage.getItem('youtubeSubscriptions')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         
         // YouTube Player API
         let ytPlayer = null;
         let currentVideoId = null;
 
-        // 📺 ИСПРАВЛЕННЫЙ YOUTUBE PLAYER - ТВОЙ КОД
+        // 📺 ИСПРАВЛЕННЫЙ YOUTUBE PLAYER
         function playYouTubeVideo(videoId) {
             currentVideoId = videoId;
             const videoContainer = document.getElementById('videoContainer');
             videoContainer.style.display = 'block';
             document.body.style.overflow = 'hidden';
             
-            // Получаем информацию о видео для истории
             const videoElement = document.querySelector(`[onclick="playYouTubeVideo('${videoId}')"]`);
             const title = videoElement?.querySelector('.video-title')?.textContent || 'Неизвестное видео';
             const channel = videoElement?.querySelector('.video-channel span')?.textContent?.replace('📺 ', '') || 'Неизвестный канал';
@@ -1142,7 +1152,6 @@
             
             addToHistory(videoId, title, channel, thumbnail);
             
-            // Используем YouTube Iframe API для корректного воспроизведения
             if (ytPlayer) {
                 ytPlayer.loadVideoById(videoId);
                 ytPlayer.playVideo();
@@ -1154,7 +1163,6 @@
         function loadYouTubePlayer(videoId) {
             const playerContainer = document.getElementById('video-player');
             
-            // Создаем iframe с правильными параметрами
             const iframe = document.createElement('iframe');
             iframe.id = 'youtube-iframe';
             iframe.width = '100%';
@@ -1168,7 +1176,6 @@
             playerContainer.innerHTML = '';
             playerContainer.appendChild(iframe);
             
-            // Инициализируем YouTube API
             if (typeof YT === 'undefined') {
                 const tag = document.createElement('script');
                 tag.src = "https://www.youtube.com/iframe_api";
@@ -1211,7 +1218,7 @@
             }
         }
 
-        // 💾 УПРАВЛЕНИЕ ДАННЫМИ - ТВОЙ КОД
+        // 💾 УПРАВЛЕНИЕ ДАННЫМИ
         function addToHistory(videoId, title, channel, thumbnail) {
             const existingIndex = watchHistory.findIndex(item => item.videoId === videoId);
             
@@ -1261,7 +1268,7 @@
             });
         }
 
-        // 📺 БЕСКОНЕЧНАЯ ЛЕНТА YOUTUBE - ТВОЙ КОД
+        // 📺 БЕСКОНЕЧНАЯ ЛЕНТА YOUTUBE
         async function searchYouTubeVideos(query, loadMore = false) {
             if (isLoadingMore) return;
             
@@ -1347,7 +1354,7 @@
                             <div class="video-channel">
                                 <span>📺 ${video.snippet.channelTitle}</span>
                                 <button class="subscribe-btn" onclick="toggleSubscription('${video.snippet.channelId}', '${video.snippet.channelTitle}', '${video.snippet.thumbnails.default.url}', event)">
-                                    🔔 Подписаться
+                                    ${subscriptions.some(sub => sub.id === video.snippet.channelId) ? '✅ Подписан' : '🔔 Подписаться'}
                                 </button>
                             </div>
                             <div class="video-meta">
@@ -1362,7 +1369,6 @@
             if (!append) {
                 resultsDiv.innerHTML += `</div>`;
                 
-                // Добавляем наблюдатель прокрутки если есть еще результаты
                 if (hasMoreResults) {
                     resultsDiv.innerHTML += `
                         <div class="scroll-observer" id="scrollObserver">
@@ -1373,14 +1379,13 @@
                 }
             }
             
-            // Обновляем наблюдатель прокрутки если кончились результаты
             if (!hasMoreResults && videosGrid.querySelector('.scroll-observer')) {
                 videosGrid.innerHTML += `<div class="no-more-results">Больше результатов нет</div>`;
                 document.querySelector('.scroll-observer')?.remove();
             }
         }
 
-        // 📺 КАНАЛЫ - ТВОЙ КОД
+        // 📺 КАНАЛЫ
         async function openChannel(channelId, channelTitle = '', channelThumbnail = '') {
             currentChannelId = channelId;
             
@@ -1538,7 +1543,7 @@
             showSubscriptions();
         }
 
-        // 🔍 ПОИСК В ИНТЕРНЕТЕ - ТВОЙ КОД
+        // 🔍 ПОИСК В ИНТЕРНЕТЕ
         async function searchWeb(query) {
             const url = `https://www.googleapis.com/customsearch/v1?key=${SEARCH_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
             
@@ -1578,7 +1583,7 @@
             resultsDiv.innerHTML = html;
         }
 
-        // 📺 YOUTUBE UI - ТВОЙ КОД
+        // 📺 YOUTUBE UI
         function switchYouTubeTab(tab) {
             currentYouTubeTab = tab;
             
@@ -1789,7 +1794,7 @@
             resultsDiv.innerHTML = html;
         }
 
-        // 🔧 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ - ТВОЙ КОД
+        // 🔧 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
         function switchMode(mode) {
             currentMode = mode;
             
@@ -1834,7 +1839,7 @@
             `;
         }
 
-        // 🔄 СИСТЕМА БЕСКОНЕЧНОЙ ПРОКРУТКИ - ТВОЙ КОД
+        // 🔄 СИСТЕМА БЕСКОНЕЧНОЙ ПРОКРУТКИ
         function setupScrollObserver() {
             const observerElement = document.getElementById('scrollObserver');
             if (!observerElement || scrollObserver) return;
@@ -1897,7 +1902,7 @@
             `;
         }
 
-        // 📱 ОСНОВНЫЕ ФУНКЦИИ ПОИСКА - ТВОЙ КОД
+        // 📱 ОСНОВНЫЕ ФУНКЦИИ ПОИСКА
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
             
@@ -2046,7 +2051,7 @@
             return `${Math.floor(diffDays / 30)} мес. назад`;
         }
 
-        // 🔐 АВТОРИЗАЦИЯ - ИСПРАВЛЕННАЯ ВЕРСИЯ (только Google OAuth)
+        // 🔐 АВТОРИЗАЦИЯ - ИСПРАВЛЕННАЯ ВЕРСИЯ (рабочая Google OAuth)
         function showAuthModal() {
             document.getElementById('authModal').style.display = 'block';
         }
@@ -2071,63 +2076,122 @@
             document.getElementById('registerError').textContent = '';
         }
 
-        // 🔐 GOOGLE OAuth 2.0 АВТОРИЗАЦИЯ
-        async function loginWithGoogle() {
-            const errorElement = document.getElementById('loginError');
-            
-            const redirectUri = window.location.origin + '/';
+        // 🔐 GOOGLE OAuth 2.0 АВТОРИЗАЦИЯ - РАБОЧАЯ ВЕРСИЯ
+        function loginWithGoogle() {
             const scope = 'profile email';
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${OAUTH_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=select_account`;
             
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${OAUTH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=select_account`;
+            // Открываем в новом окне
+            const width = 500;
+            const height = 600;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
             
-            showNotification('🔐 Перенаправление на Google...');
-            window.location.href = authUrl;
+            window.open(authUrl, 'Google Login', `width=${width},height=${height},left=${left},top=${top}`);
+            
+            // Добавляем обработчик сообщений для OAuth
+            window.addEventListener('message', handleOAuthMessage);
         }
 
-        // Проверяем OAuth ответ при загрузке
-        function checkOAuthResponse() {
+        function handleOAuthMessage(event) {
+            // Проверяем происхождение для безопасности
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data.type === 'oauth_token') {
+                const token = event.data.token;
+                fetchUserInfo(token);
+            }
+        }
+
+        function fetchUserInfo(token) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка получения данных');
+                }
+                return response.json();
+            })
+            .then(userInfo => {
+                // Сохраняем данные пользователя
+                currentUser = {
+                    id: userInfo.sub,
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Обновляем UI
+                updateAuthUI();
+                
+                // Скрываем модальное окно
+                hideAuthModal();
+                
+                showNotification(`✅ Добро пожаловать, ${userInfo.name}!`);
+            })
+            .catch(error => {
+                console.error('Ошибка получения данных пользователя:', error);
+                showNotification('❌ Ошибка авторизации');
+            });
+        }
+
+        function updateAuthUI() {
+            const authSection = document.getElementById('authSection');
+            
+            if (currentUser) {
+                authSection.innerHTML = `
+                    <div class="user-profile" onclick="logout()">
+                        <div class="user-avatar">
+                            ${currentUser.picture ? 
+                                `<img src="${currentUser.picture}" alt="${currentUser.name}">` : 
+                                currentUser.name.charAt(0).toUpperCase()
+                            }
+                        </div>
+                        <div class="user-name">${currentUser.name}</div>
+                    </div>
+                `;
+            } else {
+                authSection.innerHTML = `<button class="auth-btn" onclick="showAuthModal()">Войти</button>`;
+            }
+        }
+
+        function logout() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateAuthUI();
+                showNotification('👋 Вы вышли из системы');
+            }
+        }
+
+        // Проверяем токен в URL при загрузке (для OAuth редиректа)
+        function checkOAuthRedirect() {
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
+            const token = params.get('access_token');
             
-            const accessToken = params.get('access_token');
-            const error = params.get('error');
-            
-            if (error) {
-                showNotification(`❌ Ошибка авторизации: ${error}`);
-                return;
+            if (token) {
+                // Очищаем URL от токена
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Отправляем токен в основное окно через postMessage
+                window.opener?.postMessage({
+                    type: 'oauth_token',
+                    token: token
+                }, window.location.origin);
+                
+                // Закрываем окно OAuth
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+                
+                return true;
             }
-            
-            if (accessToken) {
-                fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                })
-                .then(response => response.json())
-                .then(userInfo => {
-                    // Показываем уведомление
-                    showNotification(`✅ Добро пожаловать, ${userInfo.name}!`);
-                    
-                    // Очищаем URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    
-                    // Скрываем модальное окно
-                    hideAuthModal();
-                })
-                .catch(error => {
-                    console.error('Ошибка получения данных пользователя:', error);
-                });
-            }
+            return false;
         }
-
-        // Проверяем OAuth при загрузке
-        window.addEventListener('load', function() {
-            checkOAuthResponse();
-            
-            // Твоя инициализация
-            switchMode('browser');
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') performSearch();
-            });
-        });
 
         // Остальные функции авторизации (для формы)
         function registerWithEmail() {
@@ -2158,6 +2222,29 @@
             hideAuthModal();
             showNotification('✅ Для полной функциональности используйте Google вход');
         }
+
+        // Инициализация при загрузке
+        window.addEventListener('load', function() {
+            // Проверяем, является ли это окном OAuth редиректа
+            if (checkOAuthRedirect()) {
+                return;
+            }
+            
+            // Проверяем существующую авторизацию
+            updateAuthUI();
+            
+            // Основная инициализация
+            switchMode('browser');
+            
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+            
+            // Добавляем обработчик для сообщений OAuth
+            window.addEventListener('message', handleOAuthMessage);
+            
+            showNotification('🚀 Приложение загружено и готово к работе!');
+        });
     </script>
 </body>
 </html>
