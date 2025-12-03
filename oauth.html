@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аутентификация Google</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #ff4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h2>Аутентификация...</h2>
+        <p>Завершаю авторизацию и возвращаю вас в приложение</p>
+    </div>
+
+    <script>
+        // Функция для получения параметров из URL
+        function getHashParams() {
+            const hash = window.location.hash.substring(1);
+            return hash.split('&').reduce(function(result, item) {
+                const parts = item.split('=');
+                result[parts[0]] = decodeURIComponent(parts[1]);
+                return result;
+            }, {});
+        }
+
+        // Получаем параметры из URL
+        const params = getHashParams();
+        const accessToken = params.access_token;
+        const error = params.error;
+
+        if (error) {
+            // Ошибка авторизации
+            document.body.innerHTML = `
+                <div class="container">
+                    <h2 style="color: #ff4444;">❌ Ошибка авторизации</h2>
+                    <p>${error}</p>
+                    <button onclick="window.close()" style="background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        Закрыть
+                    </button>
+                </div>
+            `;
+        } else if (accessToken) {
+            // Успешная авторизация
+            try {
+                // Отправляем токен в родительское окно
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({
+                        type: 'google_auth_success',
+                        token: accessToken
+                    }, 'https://volodapatik.github.io');
+                }
+                
+                // Ждем немного и закрываем окно
+                setTimeout(() => {
+                    window.close();
+                }, 1000);
+            } catch (err) {
+                console.error('Ошибка:', err);
+                document.querySelector('h2').textContent = 'Ошибка передачи данных';
+                document.querySelector('p').textContent = 'Пожалуйста, закройте это окно и попробуйте снова';
+            }
+        } else {
+            // Нет токена, перенаправляем на Google OAuth
+            const clientId = '228878747798-e8j3nprs785rsalu8gns1hlq6goeb42q';
+            const redirectUri = 'https://volodapatik.github.io/universal-browser/oauth.html';
+            const scope = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+            
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=select_account`;
+            
+            window.location.href = authUrl;
+        }
+    </script>
+</body>
+</html>
